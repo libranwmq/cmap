@@ -43,6 +43,7 @@ type concurrentMap[K Stringer, V any] struct {
 	slots   []*ConcurrentMapSlotted[K, V]
 }
 
+// ConcurrentMapSlotted The key/value pairs stored in the slots of a concurrent map
 type ConcurrentMapSlotted[K Stringer, V any] struct {
 	items map[K]V
 	sync.RWMutex
@@ -69,27 +70,6 @@ func New[K Stringer, V any](opts ...ConcurrentMapOption[K, V]) ConcurrentMapInte
 	return cm
 }
 
-// GetSlot get slot by key
-func (c *concurrentMap[K, V]) GetSlot(key K) *ConcurrentMapSlotted[K, V] {
-	return c.slots[c.sloting(key)%uint32(c.slotNum)]
-}
-
-// GetSlotNum get slot number
-func (c *concurrentMap[K, V]) GetSlotNum() int {
-	return c.slotNum
-}
-
-// GetSlotkeyNum get slot key number
-func (c *concurrentMap[K, V]) GetSlotkeyNum(idx int) int {
-	if idx < c.slotNum {
-		slot := c.slots[idx]
-		slot.RLock()
-		defer slot.RUnlock()
-		return len(slot.items)
-	}
-	return 0
-}
-
 // Count return the number of elements in the ConcurrentMap
 func (c *concurrentMap[K, V]) Count() int {
 	var count int
@@ -99,6 +79,16 @@ func (c *concurrentMap[K, V]) Count() int {
 		slot.RUnlock()
 	}
 	return count
+}
+
+// GetSlotNum get slot number
+func (c *concurrentMap[K, V]) GetSlotNum() int {
+	return c.slotNum
+}
+
+// GetSlot get slot by key
+func (c *concurrentMap[K, V]) GetSlot(key K) *ConcurrentMapSlotted[K, V] {
+	return c.slots[c.sloting(key)%uint32(c.slotNum)]
 }
 
 // IsEmpty return true if the ConcurrentMap is empty
